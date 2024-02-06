@@ -16,6 +16,11 @@ A fully distributed peer-to-peer file sharing network allowing peers to share an
 
 ![Architecture](data/arch_updated.png)
 
+## Communication Mechanism
+
+Our peer-to-peer file sharing network, inspired by Gnutella's architecture, employs a fully distributed communication mechanism devoid of central coordination. Peers dynamically join the network, discovering others and maintaining a list of active connections. File searches are propagated through the network via a flood-based query system, where each peer forwards search queries to its neighbors, exponentially increasing the search's reach. Successful queries result in direct, decentralized file transfers between peers, leveraging the network's distributed nature to enhance scalability and fault tolerance. This mechanism ensures efficient resource discovery and sharing across the network, including the principles of robust, decentralized communication.
+
+
 ## Evaluation
 
 The system's effectiveness and reliability will be assessed through metrics:
