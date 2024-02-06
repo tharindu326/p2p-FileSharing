@@ -14,7 +14,7 @@ A fully distributed peer-to-peer file sharing network allowing peers to share an
 
 ## Architecture
 
-![Architecture](data/arch.png)
+![Architecture](data/arch_updated.png)
 
 ## Evaluation
 
