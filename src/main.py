@@ -1,5 +1,5 @@
 import time
-from flask import Flask,jsonify,request,Response
+from flask import Flask,jsonify,request,Response,send_file
 from flask_apscheduler import APScheduler
 import json
 import requests
@@ -218,6 +218,18 @@ def heartbeat():
     return jsonify({
         "status": True
         })
+
+
+@app.route('/download',methods=["GET"])
+def download_file():
+    filename = request.args.get('filename')
+    if filename:
+        try:
+            return send_file(f'..shared/{filename}', as_attachment=True)
+        except FileNotFoundError:
+            return "File not found", 404
+    else:
+        return "Please provide a filename parameter", 400
 
 
 if __name__ == '__main__':
