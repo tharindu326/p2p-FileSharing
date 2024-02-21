@@ -100,6 +100,13 @@ def join_peer(host, port):
         print("Peer no response")
 
 
+def peers_to_dict():
+    peerdict = []
+    for peer in peers:
+        peerdict.append({'host':peer.host,'port':peer.port})
+    return peerdict
+
+
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
@@ -179,6 +186,15 @@ def query_hit():
 
     return jsonify({
         "status": True
+        })
+
+
+@app.route('/peer_query',methods=["GET"])
+def peer_query():
+    peerlist = peers_to_dict()
+    return jsonify({
+        "status": True,
+        "peers": peerlist
         })
 
 
