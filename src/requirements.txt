@@ -1,0 +1,3 @@
+easydict
+flask
+flask_apscheduler
