@@ -11,4 +11,19 @@ __C.file.shared_directory = '../shared/'
 __C.file.save_directory = '../downloads/'
 
 __C.peer = edict()
-__C.peer.config_file = 'config.json'
+__C.peer.configuration = {
+                                "self": {
+                                    "host": "127.0.0.1",
+                                    "port": 8081
+                                },
+                                "peers": [
+                                    {
+                                        "host": "127.0.0.1",
+                                        "port": 8082
+                                    },
+                                    {
+                                        "host": "127.0.0.1",
+                                        "port": 8083
+                                    }
+                                ]
+                            }
