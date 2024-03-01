@@ -27,3 +27,12 @@ class FileManager:
                 print(f"Failed to download file {filename}. Status code: {response.status_code}")
         except requests.exceptions.RequestException as err:
             print(f"Error occurred while downloading file {filename}: {err}")
+
+    def getSharedFile(self, filename, hash):
+        for file in self.shared_files:
+            if file.filename == filename or file.hash == hash:
+                return True, file
+        return False, None
+
+    def addSharedFile(self, file):
+        self.shared_files.append(file)

@@ -1,6 +1,9 @@
 from flask import Flask, jsonify, request, send_from_directory
 from flask_apscheduler import APScheduler
 from threading import Thread
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from peer import Peer
 from config import cfg
 from utils.query_manager import QueryManager
@@ -34,8 +37,9 @@ def heartbeat():
     data = request.get_json()
     host = data.get("host", None)
     port = data.get("port", None)
+    peer_manager.update_heartbeat(host, port)
     print(f"Received heartbeat request: {host}-{port} ")
-    return jsonify({"status": True}, 201)
+    return jsonify({"status": True}, 200)
 
 
 @app.route('/join', methods=["POST"])
@@ -47,6 +51,7 @@ def join():
     if host and port and not peer_manager.is_peer(host, port):
         peer_manager.peers.append(Peer(host, port))
         print(f"New peer joined: {host}:{port}")
+        print([peer.get_address() for peer in peer_manager.peers])
         return jsonify({"status": True})
     return jsonify({"status": False})
 
@@ -57,7 +62,7 @@ def handle_query():
     data = request.get_json()
     thread = Thread(target=query_manager.process_query, args=(data,))
     thread.start()
-    return jsonify({"status": True})
+    return jsonify({"status": True}, 200)
 
 
 @app.route('/download/<filename>', methods=['GET'])
@@ -75,14 +80,23 @@ def query_hit():
     filehash = data.get('filehash')
     host = data.get('host')
     port = data.get('port')
-
+    query_id = data.get('QID')
     print(f"File {filename} with hash {filehash} found at {host}:{port}")
-    file_manager.initiate_file_download(host, port, filename)
-    return jsonify({"status": "success"})
+    query_manager.addQueryResponse(query_id, data)
+    # file_manager.initiate_file_download(host, port, filename)
+    return jsonify({"status": "success", })
 
 
 @app.route('/ping', methods=["GET"])
 def ping():
+    return jsonify({"status": True}, 201)
+
+
+# test endpoints to initiate queries
+@app.route('/init_query', methods=["GET"])
+def init_query():
+    data = request.get_json()
+    query_manager.send_query(data)
     return jsonify({"status": True}, 201)
 
 

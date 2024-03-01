@@ -24,6 +24,13 @@ __C.peer.configuration = {
                                     {
                                         "host": "127.0.0.1",
                                         "port": 8083
+                                    },
+                                    {
+                                        "host": "127.0.0.1",
+                                        "port": 8084
                                     }
                                 ]
                             }
+
+__C.network = edict()
+__C.network.max_ttl = 5

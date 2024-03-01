@@ -1,5 +1,6 @@
 import requests
 from src.config import cfg
+from src.peer import Peer
 
 
 class PeerManager:
@@ -20,8 +21,8 @@ class PeerManager:
             ping_response = requests.get(f"http://{host}:{port}/ping")
             if ping_response.status_code == 200:
                 join_response = requests.post(f"http://{host}:{port}/join", json={"host": self.self_host, "port": self.self_port})
-                # if join_response.status_code == 200:
-                #     self.peers.append(Peer(host, port))
+                if join_response.status_code == 200:
+                    self.peers.append(Peer(host, port))
         except Exception as err:
             print(f"Failed to join peer {host}:{port}: {err}")
 
@@ -32,11 +33,24 @@ class PeerManager:
                 url = f"http://{peer.host}:{peer.port}/heartbeat"
                 data = {"host": self.self_host, "port": self.self_port}
                 response = requests.post(url, json=data)
-                if response.status_code == 200:
-                    peer.update('active')
-                    print(f"Heartbeat successful to {peer.host}:{peer.port}. Marked as active.")
-                else:
-                    peer.update('inactive')
-                    print(f"Heartbeat response from {peer.host}:{peer.port} was not successful. Marked as inactive.")
             except Exception as err:
                 print(f"Failed sending heartbeat to {peer.host}-{peer.port}: {err}")
+
+    def getPeer(self, host, port):
+        for peer in self.peers:
+            if peer.host == host and peer.port == port:
+                return peer
+        return None
+
+    def addPeer(self, peer):
+        self.peers.append(peer)
+
+    def update_heartbeat(self, host, port):
+        peer = self.getPeer(host, port)
+        if peer:
+            peer.update('active')
+
+    def getActivePeers(self):
+        peers = [peer for peer in self.peers if peer.isActive()]
+        return peers
+
