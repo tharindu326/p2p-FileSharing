@@ -4,19 +4,17 @@ from threading import Thread
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from peer import Peer
+from peer import Peer, logger
 from config import cfg
 from utils.query_manager import QueryManager
 from utils.peer_manager import PeerManager
 from utils.file_manager import FileManager
-from logger import get_debug_logger
 
 app = Flask(__name__)
 scheduler = APScheduler()
 peer_manager = PeerManager()
 file_manager = FileManager()
 query_manager = QueryManager(peer_manager, file_manager)
-app_logger = get_debug_logger('app', f'logs/app.log')
 
 
 @scheduler.task('interval', id='update_shared_files', seconds=30)
@@ -45,7 +43,7 @@ def heartbeat():
     host = data.get("host", None)
     port = data.get("port", None)
     peer_manager.update_heartbeat(host, port)
-    app_logger.info(f"Received heartbeat request: {host}-{port} ")
+    logger.info(f"[APP] Received heartbeat request: {host}-{port} ")
     return jsonify({"status": True}, 200)
 
 
@@ -57,8 +55,7 @@ def join():
     port = data.get("port")
     if host and port and not peer_manager.is_peer(host, port):
         peer_manager.peers.append(Peer(host, port))
-        app_logger.info(f"New peer joined: {host}:{port}")
-        app_logger.info([peer.get_address() for peer in peer_manager.peers])
+        logger.info(f"[APP] New peer joined: {host}:{port}")
         return jsonify({"status": True})
     return jsonify({"status": False})
 
@@ -108,7 +105,7 @@ def query_hit():
     host = data.get('host')
     port = data.get('port')
     query_id = data.get('QID')
-    app_logger.info(f"File {filename} with hash {filehash} found at {host}:{port}")
+    logger.info(f"[APP] File {filename} with hash {filehash} found at {host}:{port}")
     query_manager.addQueryResponse(query_id, data)
     # file_manager.initiate_file_download(host, port, filename)
     return jsonify({"status": "success", })
