@@ -42,6 +42,13 @@ class Peer:
         if self.status == 'active':
             status = True
         return status
+    
+    def timeSinceLastUpdate(self):
+        delta = datetime.now() - self.last_seen
+        return delta.seconds
+    
+    def disconnect(self):
+        self.status = 'inactive'
 
 
 

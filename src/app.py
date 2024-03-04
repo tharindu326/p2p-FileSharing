@@ -24,6 +24,11 @@ def send_heartbeat():
     peer_manager.send_heartbeat()
 
 
+@scheduler.task('interval', id='check_peer_liveness', seconds=60)
+def check_peer_liveness():
+    peer_manager.peer_liveness_check()
+
+
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
@@ -51,6 +56,19 @@ def join():
         print([peer.get_address() for peer in peer_manager.peers])
         return jsonify({"status": True})
     return jsonify({"status": False})
+
+
+@app.route('/get_peers', methods=["POST"])
+def get_peers():
+    """Endpoint for peers to request peer list from node."""
+    data = request.get_json()
+    host = data.get("host")
+    port = data.get("port")
+    if peer_manager.is_peer(host, port):
+        print(peer_manager.peers)
+        peer_list = [{'host':peer.host, 'port':peer.port} for peer in peer_manager.peers]
+        return jsonify({"status": True, 'peers':peer_list})
+    return jsonify({"status": False, "Msg":"Unauthorized request."})
 
 
 @app.route('/query', methods=["POST"])
@@ -119,5 +137,5 @@ if __name__ == '__main__':
     update_shared_files()
     scheduler.init_app(app)
     scheduler.start()
-    app.run(debug=True, host=cfg.peer.configuration['self']['host'],
+    app.run(debug=False, host=cfg.peer.configuration['self']['host'],
             port=cfg.peer.configuration['self']['port'])
