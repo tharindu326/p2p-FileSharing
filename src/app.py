@@ -9,12 +9,14 @@ from config import cfg
 from utils.query_manager import QueryManager
 from utils.peer_manager import PeerManager
 from utils.file_manager import FileManager
+from logger import get_debug_logger
 
 app = Flask(__name__)
 scheduler = APScheduler()
 peer_manager = PeerManager()
 file_manager = FileManager()
 query_manager = QueryManager(peer_manager, file_manager)
+app_logger = get_debug_logger('app', f'logs/app.log')
 
 
 @scheduler.task('interval', id='update_shared_files', seconds=30)
@@ -43,7 +45,7 @@ def heartbeat():
     host = data.get("host", None)
     port = data.get("port", None)
     peer_manager.update_heartbeat(host, port)
-    print(f"Received heartbeat request: {host}-{port} ")
+    app_logger.info(f"Received heartbeat request: {host}-{port} ")
     return jsonify({"status": True}, 200)
 
 
@@ -55,8 +57,8 @@ def join():
     port = data.get("port")
     if host and port and not peer_manager.is_peer(host, port):
         peer_manager.peers.append(Peer(host, port))
-        print(f"New peer joined: {host}:{port}")
-        print([peer.get_address() for peer in peer_manager.peers])
+        app_logger.info(f"New peer joined: {host}:{port}")
+        app_logger.info([peer.get_address() for peer in peer_manager.peers])
         return jsonify({"status": True})
     return jsonify({"status": False})
 
@@ -68,10 +70,9 @@ def get_peers():
     host = data.get("host")
     port = data.get("port")
     if peer_manager.is_peer(host, port):
-        print(peer_manager.peers)
-        peer_list = [{'host':peer.host, 'port':peer.port} for peer in peer_manager.peers]
-        return jsonify({"status": True, 'peers':peer_list})
-    return jsonify({"status": False, "Msg":"Unauthorized request."})
+        peer_list = [{'host': peer.host, 'port': peer.port} for peer in peer_manager.peers]
+        return jsonify({"status": True, 'peers': peer_list})
+    return jsonify({"status": False, "Msg": "Unauthorized request."})
 
 
 @app.route('/query', methods=["POST"])
@@ -107,7 +108,7 @@ def query_hit():
     host = data.get('host')
     port = data.get('port')
     query_id = data.get('QID')
-    print(f"File {filename} with hash {filehash} found at {host}:{port}")
+    app_logger.info(f"File {filename} with hash {filehash} found at {host}:{port}")
     query_manager.addQueryResponse(query_id, data)
     # file_manager.initiate_file_download(host, port, filename)
     return jsonify({"status": "success", })

@@ -1,7 +1,7 @@
 import requests
 import json
 from src.config import cfg
-from src.peer import Peer
+from src.peer import Peer, peer_logger
 
 
 class PeerManager:
@@ -38,10 +38,9 @@ class PeerManager:
                 peer.disconnect()
 
         active_peers = self.getActivePeers()
-        print("Peer liveness check...")
-        print(f"Active peers ({len(active_peers)}):")
-        print([peer.get_address() for peer in active_peers])
-
+        peer_logger.info("Peer liveness check...")
+        peer_logger.info(f"Active peers ({len(active_peers)}):")
+        peer_logger.info([peer.get_address() for peer in active_peers])
 
     def get_peer_lists(self):
         """Retrieve peer lists from neigbouring peers."""
@@ -52,12 +51,11 @@ class PeerManager:
                 data = {"host": self.self_host, "port": self.self_port}
                 response = requests.post(url, json=data)
                 response_data = json.loads(response.text)
-                print(response_data)
                 if response_data['status']:
                     self.add_peers_to_list(response_data['peers'])
-                    print([peer.get_address() for peer in self.peers])
+                    peer_logger.info([peer.get_address() for peer in self.peers])
             except Exception as err:
-                print(f"Failed retrieving peer list from {peer.host}-{peer.port}: {err}")        
+                peer_logger.error(f"Failed retrieving peer list from {peer.host}-{peer.port}: {err}")
 
     def join_peer(self, host, port):
         """Attempt to join a new peer by sending a ping and then a join request."""
@@ -68,7 +66,7 @@ class PeerManager:
                 if join_response.status_code == 200:
                     self.peers.append(Peer(host, port))
         except Exception as err:
-            print(f"Failed to join peer {host}:{port}: {err}")
+            peer_logger.error(f"Failed to join peer {host}:{port}: {err}")
 
     def send_heartbeat(self):
         """Send a heartbeat signal to all known peers."""
@@ -78,7 +76,7 @@ class PeerManager:
                 data = {"host": self.self_host, "port": self.self_port}
                 response = requests.post(url, json=data)
             except Exception as err:
-                print(f"Failed sending heartbeat to {peer.host}-{peer.port}: {err}")
+                peer_logger.error(f"Failed sending heartbeat to {peer.host}-{peer.port}: {err}")
 
     def getPeer(self, host, port):
         for peer in self.peers:
