@@ -1,6 +1,9 @@
 from flask import Flask, jsonify, request, send_from_directory
 from flask_apscheduler import APScheduler
 from threading import Thread
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from peer import Peer
 from config import cfg
 from utils.query_manager import QueryManager
