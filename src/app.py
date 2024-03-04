@@ -1,9 +1,6 @@
 from flask import Flask, jsonify, request, send_from_directory
 from flask_apscheduler import APScheduler
 from threading import Thread
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from peer import Peer
 from config import cfg
 from utils.query_manager import QueryManager
@@ -58,7 +55,15 @@ def join():
 
 @app.route('/query', methods=["POST"])
 def handle_query():
-    """Handle incoming file query requests and either respond or forward."""
+    """
+    Handle incoming file query requests and either respond or forward.
+    filename = data.get("filename")
+    filehash = data.get("filehash")
+    sender_host = data.get("host")
+    sender_port = data.get("port")
+    ttl = data.get("ttl", 2)  # time to live
+    query_id = data.get("QID")
+    """
     data = request.get_json()
     thread = Thread(target=query_manager.process_query, args=(data,))
     thread.start()
@@ -95,6 +100,16 @@ def ping():
 # test endpoints to initiate queries
 @app.route('/init_query', methods=["GET"])
 def init_query():
+    """
+    Test function to trigger a /query
+    data will include following
+    filename = data.get("filename")
+    filehash = data.get("filehash")
+    sender_host = data.get("host")
+    sender_port = data.get("port")
+    ttl = data.get("ttl", 2)  # time to live
+    query_id = data.get("QID")
+    """
     data = request.get_json()
     query_manager.send_query(data)
     return jsonify({"status": True}, 201)
