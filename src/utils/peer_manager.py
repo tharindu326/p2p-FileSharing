@@ -30,6 +30,22 @@ class PeerManager:
                     new_peer.status = 'inactive'
                     self.peers.append(new_peer)
 
+
+    def reestablish_peers(self):
+        """Try joining with inactive peers."""
+        inactive_peers = self.getInactivePeers()
+
+        if len(inactive_peers) < 4:
+            logger.info(f"[PEER] Retrieve peer lists.")
+            self.get_peer_lists()
+
+        for peer in inactive_peers:
+            if len(self.getActivePeers()) < 3:
+                self.join_peer(self, peer.host, peer.port)
+            else:
+                break
+
+
     def peer_liveness_check(self):
         """Check peer liveness."""
         for peer in self.getActivePeers():
@@ -40,6 +56,11 @@ class PeerManager:
         active_peers = self.getActivePeers()
         logger.info("[PEER] Peer liveness check...")
         logger.info(f"[PEER] Active peers ({len(active_peers)}): {[peer.get_address() for peer in active_peers]}")
+
+        if len(active_peers) < 3:
+            logger.info(f"[PEER] Active peers ({len(active_peers)}) less than min peers, initiate peer reestablishment.")
+            self.reestablish_peers()
+
 
     def get_peer_lists(self):
         """Retrieve peer lists from neighbouring peers."""
