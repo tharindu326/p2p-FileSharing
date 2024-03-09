@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, render_template, jsonify, request, send_from_directory
 from flask_apscheduler import APScheduler
 from threading import Thread
 import sys
@@ -30,11 +30,6 @@ def send_heartbeat():
 @scheduler.task('interval', id='check_peer_liveness', seconds=60)
 def check_peer_liveness():
     peer_manager.peer_liveness_check()
-
-
-@app.route('/')
-def hello_world():
-    return 'Hello, World!'
 
 
 @app.route('/heartbeat', methods=["POST"])
@@ -117,7 +112,7 @@ def ping():
 
 
 # test endpoints to initiate queries
-@app.route('/init_query', methods=["GET"])
+@app.route('/init_query', methods=["POST"])
 def init_query():
     """
     Test function to trigger a /query
@@ -130,8 +125,25 @@ def init_query():
     query_id = data.get("QID")
     """
     data = request.get_json()
-    query_manager.send_query(data)
-    return jsonify({"status": True}, 201)
+    query = query_manager.send_query(data)
+    return jsonify({"status": True, "QID": query.id}, 201)
+
+
+@app.route('/query_results/<qid>', methods=['GET'])
+def get_query_results(qid):
+    query = query_manager.getQuery(qid)
+    if query:
+        if len(query.responses)>0:
+            return jsonify({"status": True, "msg": "Query results found.", "results":query.responses}, 200)
+        else:
+            return jsonify({"status": True, "msg": "No results found.", "results":[]}, 200)
+    else:
+        return jsonify({"status": False, "msg": "No query found."}, 200)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 import os
 import requests
+from datetime import datetime
 import sys
 sys.path.append('../src')
 from src.config import cfg
@@ -25,9 +26,15 @@ class QueryManager:
         self.queries.append(query)
 
     def addQueryResponse(self, query_id, data):
+        """Add query hit response data to query response list."""
         query = self.getQuery(query_id)
+        filename = data.get('filename')
+        filehash = data.get('filehash')
+        host = data.get('host')
+        port = data.get('port')
+        timestamp = datetime.now()
         if query:
-            query.addResponse(data)
+            query.addResponse({'QID':query_id, 'timestamp':timestamp,'filename':filename, 'filehash':filehash,'host':host,'port':port})
 
     def is_local(self, filename, hash):
         """Check if the file is available in the local shared directory."""
@@ -103,3 +110,4 @@ class QueryManager:
             else:
                 logger.error(
                     f"[QUERY] Failed to send query to {peer.host}:{peer.port}, status code: {response.status_code}")
+        return query
