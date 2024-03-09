@@ -5,8 +5,116 @@
     <title>p2p File sharing</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{{ url_for('static', filename= 'css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-   <h1>Welcome to p2p File sharing!</h1>
+   <div class="container">
+    <h1 class="header">Welcome to p2p File sharing!</h1>
+    <form id="searchForm">
+        <div class="row">
+            <div class="input-field col s5">
+                <input type="search" id="search-filename" name="filename" placeholder="Filename" aria-label="Search">
+            </div>
+            <div class="input-field col s5">
+                <input type="search" id="search-filehash" name="filehash" placeholder="Hash" aria-label="Search">
+            </div>
+            <div class="input-field col s2">
+                <button class="btn waves-effect waves-light" type="submit" name="action" id="submit">Search
+                    <i class="material-icons right">search</i>
+                </button>
+            </div>
+        </div>
+        
+    </form>
+    </div>
+
+    <div class="container">
+        <div id="currentSearch"></div>
+        <br>
+        <div id="searchResults"></div>
+    </div>
+    
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+    var queryid = "none";
+
+    $(document).ready(function(){
+        $('#searchForm').submit(function(event){
+            // Prevent the form from submitting normally
+            event.preventDefault();
+
+            var searchedfilename = $('#search-filename').val();
+            var searchedfilehash = $('#search-filehash').val()
+
+            // Add the search word to the page
+            $('#currentSearch').html('<p>Searched file: ' + searchedfilename +" "+ searchedfilehash +'</p>');
+            
+            // Get the form data
+            var formData = {
+                filename: $('#search-filename').val(),
+                filehash: $('#search-filehash').val()
+            };
+            
+            // Send AJAX request
+            $.ajax({
+                type: 'POST',
+                url: '/init_query', // Replace 'search.php' with your backend script URL
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response){
+                    console.log(response[0]);
+                    queryid = response[0].QID;
+                    
+                },
+                error: function(xhr, status, error){
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+
+        function displayResults(response) {
+            var listHTML = '<ul class="collection">';
+            var res = response.results;
+            res.forEach(function(item) {
+                listHTML += '<li class="collection-item"><div>';
+                listHTML += '<span style="padding-right: 10px;">' +  item.host+':'+item.port + '</span>';
+                listHTML += '<span style="padding-right: 10px;"><b>' + item.filename + '</b></span>';
+                listHTML += '<span><a href="http://' + item.host+':'+item.port + '/download/'+item.filename+'"> Download </a></span>';
+                listHTML += '<div> hash : ' + item.filehash + '</div>';
+                listHTML += '</div></li>';
+            });
+            listHTML += '</ul>';
+            $('#searchResults').html(listHTML);
+        }
+
+        function pollForResult() {
+        setInterval(function() {
+            $.ajax({
+                type: 'GET',
+                url: '/query_results/'+queryid, // Replace 'getResult.php' with your backend script URL to get results
+                success: function(response){
+                    console.log(response[0]);
+                    if(response[0].status == true){
+                        displayResults(response[0]);
+                    }else{
+                        $('#searchResults').html("<p>No results.</p>");
+                    };
+                    
+                },
+                error: function(xhr, status, error){
+                    console.error(xhr.responseText);
+                }
+            });
+        }, 5000); // Poll every 5 seconds (adjust as needed)
+
+    }
+    pollForResult();
+    });
+    </script>
 </body>
+
 </html>
+

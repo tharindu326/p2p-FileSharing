@@ -21,10 +21,12 @@ class Peer:
         self.last_seen = datetime.now()
         logger.info(f"[PEER] Updated {self.get_address()} to status '{self.status}' at {self.last_seen}")
 
-    def send_query(self, filename: str, filehash: str, ttl: int, query_id) -> None:
+    def send_query(self, sender_host: str, sender_port: str, filename: str, filehash: str, ttl: int, query_id) -> None:
         """Send a file query to this peer."""
         url = f"http://{self.host}:{self.port}/query"
         data = {
+            "host":sender_host,
+            "port":sender_port,
             "filename": filename,
             "filehash": filehash,
             "ttl": ttl,

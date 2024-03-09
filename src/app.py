@@ -79,6 +79,7 @@ def handle_query():
     query_id = data.get("QID")
     """
     data = request.get_json()
+    print(data)
     thread = Thread(target=query_manager.process_query, args=(data,))
     thread.start()
     return jsonify({"status": True}, 200)
@@ -134,11 +135,11 @@ def get_query_results(qid):
     query = query_manager.getQuery(qid)
     if query:
         if len(query.responses)>0:
-            return jsonify({"status": True, "msg": "Query results found.", "results":query.responses}, 200)
+            return jsonify({"status": True, "QID": query.id, "msg": "Query results found.", "results":query.responses}, 200)
         else:
-            return jsonify({"status": True, "msg": "No results found.", "results":[]}, 200)
+            return jsonify({"status": False, "QID": query.id, "msg": "No results found.", "results":[]}, 200)
     else:
-        return jsonify({"status": False, "msg": "No query found."}, 200)
+        return jsonify({"status": False, "QID": None, "msg": "No query found."}, 404)
 
 @app.route('/')
 def index():
