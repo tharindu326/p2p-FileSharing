@@ -41,7 +41,7 @@ class PeerManager:
 
         for peer in inactive_peers:
             if len(self.getActivePeers()) < 3:
-                self.join_peer(self, peer.host, peer.port)
+                self.join_peer(peer.host, peer.port)
             else:
                 break
 
