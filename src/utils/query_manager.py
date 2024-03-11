@@ -111,3 +111,7 @@ class QueryManager:
                 logger.error(
                     f"[QUERY] Failed to send query to {peer.host}:{peer.port}, status code: {response.status_code}")
         return query
+    
+    def toDict(self):
+        queries = [query.toDict() for query in self.queries]
+        return queries

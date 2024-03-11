@@ -140,10 +140,22 @@ def get_query_results(qid):
             return jsonify({"status": False, "QID": query.id, "msg": "No results found.", "results":[]}, 200)
     else:
         return jsonify({"status": False, "QID": None, "msg": "No query found."}, 404)
+    
+
+@app.route('/stats_all', methods=['GET'])
+def get_stats_all():
+    try:
+        return jsonify({"status": True,"peers": peer_manager.toDict(), "queries": query_manager.toDict()[::-1]}, 200)
+    except Exception:
+        return jsonify({"status": False,"peers": [], "queries": []}, 201)
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/stats')
+def stats():
+    return render_template('stats.html')
 
 
 

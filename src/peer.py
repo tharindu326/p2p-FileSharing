@@ -54,5 +54,14 @@ class Peer:
     def disconnect(self):
         self.status = 'inactive'
 
+    def toDict(self):
+        return {
+            'host': self.host,
+            'port': self.port,
+            'status': self.status,
+            'last_seen': self.last_seen.strftime('%Y-%m-%d %H:%M:%S'),
+            'last_update':self.timeSinceLastUpdate()
+        }
+
 
 

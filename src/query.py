@@ -22,3 +22,12 @@ class Query:
 
     def getResponses(self):
         return self.responses
+
+    def toDict(self):
+        return {
+            'id': str(self.id),
+            'filename': self.filename,
+            'hash': self.hash,
+            'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'responses': self.responses
+        }

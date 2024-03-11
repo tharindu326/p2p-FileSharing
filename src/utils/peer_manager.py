@@ -119,4 +119,8 @@ class PeerManager:
     def getInactivePeers(self):
         peers = [peer for peer in self.peers if not peer.isActive()]
         return peers
+    
+    def toDict(self):
+        peers = [peer.toDict() for peer in self.peers]
+        return peers
 
