@@ -1,10 +1,10 @@
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, render_template, jsonify, request, send_from_directory
 from flask_apscheduler import APScheduler
 from threading import Thread
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from peer import Peer
+from peer import Peer, logger
 from config import cfg
 from utils.query_manager import QueryManager
 from utils.peer_manager import PeerManager
@@ -32,18 +32,13 @@ def check_peer_liveness():
     peer_manager.peer_liveness_check()
 
 
-@app.route('/')
-def hello_world():
-    return 'Hello, World!'
-
-
 @app.route('/heartbeat', methods=["POST"])
 def heartbeat():
     data = request.get_json()
     host = data.get("host", None)
     port = data.get("port", None)
     peer_manager.update_heartbeat(host, port)
-    print(f"Received heartbeat request: {host}-{port} ")
+    logger.info(f"[APP] Received heartbeat request: {host}-{port} ")
     return jsonify({"status": True}, 200)
 
 
@@ -55,8 +50,7 @@ def join():
     port = data.get("port")
     if host and port and not peer_manager.is_peer(host, port):
         peer_manager.peers.append(Peer(host, port))
-        print(f"New peer joined: {host}:{port}")
-        print([peer.get_address() for peer in peer_manager.peers])
+        logger.info(f"[APP] New peer joined: {host}:{port}")
         return jsonify({"status": True})
     return jsonify({"status": False})
 
@@ -68,10 +62,9 @@ def get_peers():
     host = data.get("host")
     port = data.get("port")
     if peer_manager.is_peer(host, port):
-        print(peer_manager.peers)
-        peer_list = [{'host':peer.host, 'port':peer.port} for peer in peer_manager.peers]
-        return jsonify({"status": True, 'peers':peer_list})
-    return jsonify({"status": False, "Msg":"Unauthorized request."})
+        peer_list = [{'host': peer.host, 'port': peer.port} for peer in peer_manager.peers]
+        return jsonify({"status": True, 'peers': peer_list})
+    return jsonify({"status": False, "Msg": "Unauthorized request."})
 
 
 @app.route('/query', methods=["POST"])
@@ -86,6 +79,7 @@ def handle_query():
     query_id = data.get("QID")
     """
     data = request.get_json()
+    print(data)
     thread = Thread(target=query_manager.process_query, args=(data,))
     thread.start()
     return jsonify({"status": True}, 200)
@@ -107,7 +101,7 @@ def query_hit():
     host = data.get('host')
     port = data.get('port')
     query_id = data.get('QID')
-    print(f"File {filename} with hash {filehash} found at {host}:{port}")
+    logger.info(f"[APP] File {filename} with hash {filehash} found at {host}:{port}")
     query_manager.addQueryResponse(query_id, data)
     # file_manager.initiate_file_download(host, port, filename)
     return jsonify({"status": "success", })
@@ -119,7 +113,7 @@ def ping():
 
 
 # test endpoints to initiate queries
-@app.route('/init_query', methods=["GET"])
+@app.route('/init_query', methods=["POST"])
 def init_query():
     """
     Test function to trigger a /query
@@ -132,8 +126,37 @@ def init_query():
     query_id = data.get("QID")
     """
     data = request.get_json()
-    query_manager.send_query(data)
-    return jsonify({"status": True}, 201)
+    query = query_manager.send_query(data)
+    return jsonify({"status": True, "QID": query.id}, 201)
+
+
+@app.route('/query_results/<qid>', methods=['GET'])
+def get_query_results(qid):
+    query = query_manager.getQuery(qid)
+    if query:
+        if len(query.responses)>0:
+            return jsonify({"status": True, "QID": query.id, "msg": "Query results found.", "results":query.responses}, 200)
+        else:
+            return jsonify({"status": False, "QID": query.id, "msg": "No results found.", "results":[]}, 200)
+    else:
+        return jsonify({"status": False, "QID": None, "msg": "No query found."}, 404)
+    
+
+@app.route('/stats_all', methods=['GET'])
+def get_stats_all():
+    try:
+        return jsonify({"status": True,"peers": peer_manager.toDict(), "queries": query_manager.toDict()[::-1]}, 200)
+    except Exception:
+        return jsonify({"status": False,"peers": [], "queries": []}, 201)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/stats')
+def stats():
+    return render_template('stats.html')
+
 
 
 if __name__ == '__main__':

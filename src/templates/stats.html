@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>p2p File sharing</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+   <div class="container">
+        <div class="row ">
+            <div class="col center-align">
+                <img src="{{ url_for('static', filename= 'icons/logo.png') }}" width="150" height="150">
+            </div>
+            <div class="col center-align">
+                <h1 class="header">Welcome to p2p File sharing!</h1>
+            </div>
+            
+        </div>
+            <h5>Peer Stats</h5>
+            <table class="striped">
+                <thead>
+                    <tr>
+                        <th>Host</th>
+                        <th>Port</th>
+                        <th>Status</th>
+                        <th>Last Heartbeat</th>
+                        <th>Last Update (s)</th>
+                    </tr>
+                </thead>
+                <tbody id="peerTableBody">
+                    <!-- Table body will be dynamically populated -->
+                </tbody>
+            </table>
+
+            <h5>Query Stats</h5>
+            <table class="striped">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Filename</th>
+                        <th>ID</th>
+                        <th>Hash</th>
+                        <th>Responses</th>
+                    </tr>
+                </thead>
+                <tbody id="queryTableBody">
+                    <!-- Table body will be dynamically populated -->
+                </tbody>
+            </table>
+    </div>
+    
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+    $(document).ready(function(){
+        function displayResults(response) {
+            var peers = response.peers;
+            var queries = response.queries;
+
+            function joinObjectsToString(objects) {
+                var objectStrings = [];
+                objects.forEach(function(object) {
+                    objectStrings.push(JSON.stringify(object));
+                });
+                var joinedString = objectStrings.join(', ');
+                return joinedString;
+            }
+
+            peers.forEach(function(peer) {
+                var tableBody = document.getElementById("peerTableBody");
+
+                var row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${peer.host}</td>
+                    <td>${peer.port}</td>
+                    <td>${peer.status}</td>
+                    <td>${peer.last_seen}</td>
+                    <td>${peer.last_update}</td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+
+            queries.forEach(function(query) {
+                var tableBody = document.getElementById("queryTableBody");
+
+                var row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${query.timestamp}</td>
+                    <td>${query.filename}</td>
+                    <td>${query.id}</td>
+                    <td>${query.hash}</td>
+                    <td>${joinObjectsToString(query.responses)}</td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        $.ajax({
+                type: 'GET',
+                url: '/stats_all',
+                success: function(response){
+                    console.log(response[0]);
+                    if(response[0].status == true){
+                        displayResults(response[0]);
+                    }else{
+                        $('#peerStats').html("<p>No results.</p>");
+                        $('#queryStats').html("<p>No results.</p>");
+                    };
+                    
+                },
+                error: function(xhr, status, error){
+                    console.error(xhr.responseText);
+                }
+            });
+    
+    });
+    </script>
+</body>
+
+</html>
+

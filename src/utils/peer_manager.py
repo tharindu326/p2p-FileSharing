@@ -1,7 +1,7 @@
 import requests
 import json
 from src.config import cfg
-from src.peer import Peer
+from src.peer import Peer, logger
 
 
 class PeerManager:
@@ -30,6 +30,22 @@ class PeerManager:
                     new_peer.status = 'inactive'
                     self.peers.append(new_peer)
 
+
+    def reestablish_peers(self):
+        """Try joining with inactive peers."""
+        inactive_peers = self.getInactivePeers()
+
+        if len(inactive_peers) < 4:
+            logger.info(f"[PEER] Retrieve peer lists.")
+            self.get_peer_lists()
+
+        for peer in inactive_peers:
+            if len(self.getActivePeers()) < 3:
+                self.join_peer(peer.host, peer.port)
+            else:
+                break
+
+
     def peer_liveness_check(self):
         """Check peer liveness."""
         for peer in self.getActivePeers():
@@ -38,13 +54,16 @@ class PeerManager:
                 peer.disconnect()
 
         active_peers = self.getActivePeers()
-        print("Peer liveness check...")
-        print(f"Active peers ({len(active_peers)}):")
-        print([peer.get_address() for peer in active_peers])
+        logger.info("[PEER] Peer liveness check...")
+        logger.info(f"[PEER] Active peers ({len(active_peers)}): {[peer.get_address() for peer in active_peers]}")
+
+        if len(active_peers) < 3:
+            logger.info(f"[PEER] Active peers ({len(active_peers)}) less than min peers, initiate peer reestablishment.")
+            self.reestablish_peers()
 
 
     def get_peer_lists(self):
-        """Retrieve peer lists from neigbouring peers."""
+        """Retrieve peer lists from neighbouring peers."""
         peer_list = []
         for peer in self.getActivePeers():
             try:
@@ -52,12 +71,11 @@ class PeerManager:
                 data = {"host": self.self_host, "port": self.self_port}
                 response = requests.post(url, json=data)
                 response_data = json.loads(response.text)
-                print(response_data)
                 if response_data['status']:
                     self.add_peers_to_list(response_data['peers'])
-                    print([peer.get_address() for peer in self.peers])
+                    logger.info(f'[PEER] Peer list: {[peer.get_address() for peer in self.peers]}')
             except Exception as err:
-                print(f"Failed retrieving peer list from {peer.host}-{peer.port}: {err}")        
+                logger.error(f"[PEER] Failed retrieving peer list from {peer.host}-{peer.port}: {err}")
 
     def join_peer(self, host, port):
         """Attempt to join a new peer by sending a ping and then a join request."""
@@ -68,7 +86,7 @@ class PeerManager:
                 if join_response.status_code == 200:
                     self.peers.append(Peer(host, port))
         except Exception as err:
-            print(f"Failed to join peer {host}:{port}: {err}")
+            logger.error(f"[PEER] Failed to join peer {host}:{port}: {err}")
 
     def send_heartbeat(self):
         """Send a heartbeat signal to all known peers."""
@@ -78,7 +96,7 @@ class PeerManager:
                 data = {"host": self.self_host, "port": self.self_port}
                 response = requests.post(url, json=data)
             except Exception as err:
-                print(f"Failed sending heartbeat to {peer.host}-{peer.port}: {err}")
+                logger.error(f"[PEER] Failed sending heartbeat to {peer.host}-{peer.port}: {err}")
 
     def getPeer(self, host, port):
         for peer in self.peers:
@@ -100,5 +118,9 @@ class PeerManager:
     
     def getInactivePeers(self):
         peers = [peer for peer in self.peers if not peer.isActive()]
+        return peers
+    
+    def toDict(self):
+        peers = [peer.toDict() for peer in self.peers]
         return peers
 

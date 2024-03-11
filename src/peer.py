@@ -1,5 +1,7 @@
 from datetime import datetime
 import requests
+from logger import get_debug_logger
+logger = get_debug_logger('log', f'logs/log.log')
 
 
 class Peer:
@@ -17,12 +19,14 @@ class Peer:
         """Update the peer's status and refresh the last seen timestamp."""
         self.status = status
         self.last_seen = datetime.now()
-        print(f"Updated {self.get_address()} to status '{self.status}' at {self.last_seen}")
+        logger.info(f"[PEER] Updated {self.get_address()} to status '{self.status}' at {self.last_seen}")
 
-    def send_query(self, filename: str, filehash: str, ttl: int, query_id) -> None:
+    def send_query(self, sender_host: str, sender_port: str, filename: str, filehash: str, ttl: int, query_id) -> None:
         """Send a file query to this peer."""
         url = f"http://{self.host}:{self.port}/query"
         data = {
+            "host":sender_host,
+            "port":sender_port,
             "filename": filename,
             "filehash": filehash,
             "ttl": ttl,
@@ -31,11 +35,11 @@ class Peer:
         try:
             response = requests.post(url, json=data)
             if response.status_code == 200:
-                print(f"Query successfully sent to {self.host}:{self.port}")
+                logger.info(f"[PEER] Query successfully sent to {self.host}:{self.port}")
             else:
-                print(f"Failed to send query to {self.host}:{self.port}, status code: {response.status_code}")
+                logger.error(f"[PEER] Failed to send query to {self.host}:{self.port}, status code: {response.status_code}")
         except requests.exceptions.RequestException as e:
-            print(f"Error sending query to {self.host}:{self.port}: {e}")
+            logger.error(f"[PEER] Error sending query to {self.host}:{self.port}: {e}")
 
     def isActive(self):
         status = False
@@ -49,6 +53,15 @@ class Peer:
     
     def disconnect(self):
         self.status = 'inactive'
+
+    def toDict(self):
+        return {
+            'host': self.host,
+            'port': self.port,
+            'status': self.status,
+            'last_seen': self.last_seen.strftime('%Y-%m-%d %H:%M:%S'),
+            'last_update':self.timeSinceLastUpdate()
+        }
 
 
 

@@ -1,4 +1,3 @@
 __pycache__/
 .idea/
-*.jpg
-test.py
+*.log
