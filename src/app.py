@@ -163,5 +163,5 @@ if __name__ == '__main__':
     update_shared_files()
     scheduler.init_app(app)
     scheduler.start()
-    app.run(debug=False, host=cfg.peer.configuration['self']['host'],
+    app.run(debug=False, host='0.0.0.0',
             port=cfg.peer.configuration['self']['port'])
