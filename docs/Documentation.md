@@ -1,4 +1,7 @@
-# Implementation
+
+# Documentation
+
+## Implementation
 
 The system is built as a fully peer-to-peer (P2P) network that operates through an API, facilitating various operations such as joining the network, sharing and downloading files, and maintaining the network's health. It employs Flask, a Python web framework, for creating the API endpoints and APScheduler for scheduling periodic tasks. The system initializes a Flask application to serve as the backbone for the API. This API allows peers to communicate and perform actions like joining the network, sharing files, and retrieving file lists from other peers.
 
@@ -11,6 +14,8 @@ Communication between these peers is facilitated through a defined set of APIs a
 
 
 ## Components and Operations
+
+![ULM](../data/uml_diagram.png)
 
 ### Scheduling Tasks
 Using APScheduler, the system schedules regular tasks to keep the network updated and operational. These include updating the list of shared files every 30 seconds, sending heartbeat signals to indicate a peer is alive, and checking the liveness of peers to maintain network integrity.
