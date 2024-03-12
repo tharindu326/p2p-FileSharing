@@ -12,7 +12,6 @@ A fully distributed peer-to-peer file sharing network allowing peers to share an
 - The network facilitates periodic heartbeat signals among peers to update their availability.
 - Peers can search for files in the network using a gossip protocol.
 - The system enables peer-to-peer file retrieval.
-- Caching/distributed file directory and structured query routing.
 
 ## Architecture
 
