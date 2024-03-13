@@ -1,6 +1,33 @@
 
 # Documentation
 
+## Industry track
+## Fully Distributed Peer-to-Peer File Sharing Network
+
+### Team
+Pramod Munaweera (2304791) – Corporate
+Tharindu Muthukuda Walawwe (2303254) – Corporate 
+
+## Introduction
+
+![Intro](../data/intro.png)
+
+A fully distributed peer-to-peer file sharing network allowing peers to share and search for files within the network, and download files directly among peers. This system aims to implement functionalities similar to those found in Gnutella.
+
+### Repository
+[https://github.com/tharindu326/p2p-FileSharing](https://github.com/tharindu326/p2p-FileSharing)
+
+### Functionalities
+
+- Peers share files with the network without the need for central servers; they store peer (neighbor) pointers and file directories themselves.
+- The network facilitates periodic heartbeat signals among peers to update their availability.
+- Peers can search for files in the network using a gossip protocol.
+- The system enables peer-to-peer file retrieval.
+
+### Architecture
+
+![Architecture](data/arch_updated.png)
+
 ## Implementation
 
 The system is built as a fully peer-to-peer (P2P) network that operates through an API, facilitating various operations such as joining the network, sharing and downloading files, and maintaining the network's health. It employs Flask, a Python web framework, for creating the API endpoints and APScheduler for scheduling periodic tasks. The system initializes a Flask application to serve as the backbone for the API. This API allows peers to communicate and perform actions like joining the network, sharing files, and retrieving file lists from other peers.
