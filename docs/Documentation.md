@@ -5,8 +5,8 @@
 ## Fully Distributed Peer-to-Peer File Sharing Network
 
 ### Team
-Pramod Munaweera (2304791) – Corporate
-Tharindu Muthukuda Walawwe (2303254) – Corporate 
+- Pramod Munaweera (2304791) – Corporate
+- Tharindu Muthukuda Walawwe (2303254) – Corporate 
 
 ## Introduction
 
@@ -26,7 +26,7 @@ A fully distributed peer-to-peer file sharing network allowing peers to share an
 
 ### Architecture
 
-![Architecture](data/arch_updated.png)
+![Architecture](../data/arch_updated.png)
 
 ## Implementation
 
