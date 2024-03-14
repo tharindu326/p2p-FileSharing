@@ -48,8 +48,10 @@ def join():
     data = request.get_json()
     host = data.get("host")
     port = data.get("port")
-    if host and port and not peer_manager.is_peer(host, port):
-        peer_manager.peers.append(Peer(host, port))
+    if host and port:
+        new_peer = Peer(host, port)
+        new_peer.status = 'active'
+        peer_manager.addPeer(new_peer)
         logger.info(f"[APP] New peer joined: {host}:{port}")
         return jsonify({"status": True})
     return jsonify({"status": False})

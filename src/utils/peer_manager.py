@@ -28,7 +28,7 @@ class PeerManager:
                 if not self.is_peer(peer['host'], peer['port']):
                     new_peer = Peer(peer['host'], peer['port'])
                     new_peer.status = 'inactive'
-                    self.peers.append(new_peer)
+                    self.addPeer(new_peer)
 
 
     def reestablish_peers(self):
@@ -79,14 +79,21 @@ class PeerManager:
 
     def join_peer(self, host, port):
         """Attempt to join a new peer by sending a ping and then a join request."""
+        peer = Peer(host, port)
         try:
             ping_response = requests.get(f"http://{host}:{port}/ping")
             if ping_response.status_code == 200:
                 join_response = requests.post(f"http://{host}:{port}/join", json={"host": self.self_host, "port": self.self_port})
                 if join_response.status_code == 200:
-                    self.peers.append(Peer(host, port))
+                    peer.status = 'active'
+                else:
+                    peer.status = 'inactive'
+            else:
+                peer.status = 'inactive'
         except Exception as err:
+            peer.status = 'inactive'
             logger.error(f"[PEER] Failed to join peer {host}:{port}: {err}")
+        self.addPeer(peer)
 
     def send_heartbeat(self):
         """Send a heartbeat signal to all known peers."""
@@ -105,12 +112,18 @@ class PeerManager:
         return None
 
     def addPeer(self, peer):
-        self.peers.append(peer)
+        if not self.is_peer(peer.host, peer.port):
+            self.peers.append(peer)
+        else:
+            current = self.getPeer(peer.host, peer.port)
+            current.status = peer.status
+            current.last_seen = peer.last_seen
 
     def update_heartbeat(self, host, port):
         peer = self.getPeer(host, port)
         if peer:
-            peer.update('active')
+            if peer.isActive():
+                peer.update('active')
 
     def getActivePeers(self):
         peers = [peer for peer in self.peers if peer.isActive()]
