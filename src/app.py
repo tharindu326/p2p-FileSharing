@@ -4,17 +4,16 @@ from threading import Thread
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from peer import Peer, logger
-from config import cfg
+from peer import Peer
 from utils.query_manager import QueryManager
 from utils.peer_manager import PeerManager
 from utils.file_manager import FileManager
+import argparse
+import importlib
+from logger import get_debug_logger
 
 app = Flask(__name__)
 scheduler = APScheduler()
-peer_manager = PeerManager()
-file_manager = FileManager()
-query_manager = QueryManager(peer_manager, file_manager)
 
 
 @scheduler.task('interval', id='update_shared_files', seconds=30)
@@ -162,8 +161,23 @@ def stats():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', '-cfg', required=True, type=str, help='Path to the configuration module')
+    args = parser.parse_args()
+    
+    config_module = importlib.import_module(args.config)
+    cfg = config_module.cfg
+    
+    logger = get_debug_logger('log', f'logs/log_{cfg.peer.configuration["self"]["port"]}.log')
+
+    peer_manager = PeerManager(cfg=cfg, logger=logger)
+    file_manager = FileManager(cfg=cfg, logger=logger)
+    query_manager = QueryManager(peer_manager, file_manager, cfg=cfg, logger=logger)
+
     update_shared_files()
     scheduler.init_app(app)
     scheduler.start()
-    app.run(debug=False, host='0.0.0.0',
-            port=cfg.peer.configuration['self']['port'])
+
+    app.run(debug=False, host=cfg.peer.configuration['self']['host'], port=cfg.peer.configuration['self']['port'])
+    
+    

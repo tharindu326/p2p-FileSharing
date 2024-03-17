@@ -1,11 +1,10 @@
 from datetime import datetime
 import requests
-from logger import get_debug_logger
-logger = get_debug_logger('log', f'logs/log.log')
 
 
 class Peer:
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(self, host: str, port: int, logger) -> None:
+        self.logger = logger
         self.host = host
         self.port = port
         self.status = 'active'
@@ -19,7 +18,7 @@ class Peer:
         """Update the peer's status and refresh the last seen timestamp."""
         self.status = status
         self.last_seen = datetime.now()
-        logger.info(f"[PEER] Updated {self.get_address()} to status '{self.status}' at {self.last_seen}")
+        self.logger.info(f"[PEER] Updated {self.get_address()} to status '{self.status}' at {self.last_seen}")
 
     def send_query(self, sender_host: str, sender_port: str, filename: str, filehash: str, ttl: int, query_id) -> None:
         """Send a file query to this peer."""
@@ -35,11 +34,11 @@ class Peer:
         try:
             response = requests.post(url, json=data)
             if response.status_code == 200:
-                logger.info(f"[PEER] Query successfully sent to {self.host}:{self.port}")
+                self.logger.info(f"[PEER] Query successfully sent to {self.host}:{self.port}")
             else:
-                logger.error(f"[PEER] Failed to send query to {self.host}:{self.port}, status code: {response.status_code}")
+                self.logger.error(f"[PEER] Failed to send query to {self.host}:{self.port}, status code: {response.status_code}")
         except requests.exceptions.RequestException as e:
-            logger.error(f"[PEER] Error sending query to {self.host}:{self.port}: {e}")
+            self.logger.error(f"[PEER] Error sending query to {self.host}:{self.port}: {e}")
 
     def isActive(self):
         status = False

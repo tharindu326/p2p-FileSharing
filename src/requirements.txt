@@ -2,3 +2,4 @@ easydict
 requests
 flask
 flask_apscheduler
+pyvis

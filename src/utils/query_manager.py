@@ -3,18 +3,17 @@ import requests
 from datetime import datetime
 import sys
 sys.path.append('../src')
-from src.config import cfg
 from src.query import Query
-from src.peer import logger
-
 
 class QueryManager:
-    def __init__(self, peer_manager, file_manager):
+    def __init__(self, peer_manager, file_manager, cfg, logger):
+        self.logger = logger
         self.peer_manager = peer_manager
         self.file_manager = file_manager
         self.self_host = cfg.peer.configuration['self']['host']
         self.self_port = cfg.peer.configuration['self']['port']
         self.queries = []
+        self.cfg = cfg
 
     def getQuery(self, query_id):
         for query in self.queries:
@@ -62,11 +61,11 @@ class QueryManager:
         found_locally, file = self.is_local(filename, filehash)
         if found_locally:
             # Send a query hit back to the requester
-            logger.info(f"[QUERY] File {filename} found locally at {file}. Sending query hit back to requester.")
+            self.logger.info(f"[QUERY] File {filename} found locally at {file}. Sending query hit back to requester.")
             self.send_query_hit(sender_host, sender_port, file.filename, file.hash, query_id)
         else:
             # Forward the query to other peers
-            logger.info(f"[QUERY] File {filename} not found locally. Forwarding query to other peers.")
+            self.logger.info(f"[QUERY] File {filename} not found locally. Forwarding query to other peers.")
             self.forward_query(sender_host, sender_port, filename, filehash, ttl - 1, query_id)
 
     def send_query_hit(self, requester_host, requester_port, filename, filehash, query_id):
@@ -82,11 +81,11 @@ class QueryManager:
         try:
             response = requests.post(url, json=data)
             if response.status_code == 200:
-                logger.info(f"[QUERY] Query hit successfully sent to {requester_host}:{requester_port}")
+                self.logger.info(f"[QUERY] Query hit successfully sent to {requester_host}:{requester_port}")
             else:
-                logger.error(f"[QUERY] Failed to send query hit to {requester_host}:{requester_port}, status code: {response.status_code}")
+                self.logger.error(f"[QUERY] Failed to send query hit to {requester_host}:{requester_port}, status code: {response.status_code}")
         except requests.exceptions.RequestException as err:
-            logger.error(f"[QUERY] Error sending query hit to {requester_host}:{requester_port}: {err}")
+            self.logger.error(f"[QUERY] Error sending query hit to {requester_host}:{requester_port}: {err}")
 
     def send_query(self, data):
         filename = data.get("filename")
@@ -101,14 +100,14 @@ class QueryManager:
                 "filehash": filehash,
                 "host": self.self_host,
                 "port": self.self_port,
-                "ttl": cfg.network.max_ttl,
+                "ttl": self.cfg.network.max_ttl,
                 'QID': str(query.id)
             }
             response = requests.post(url, json=data)
             if response.status_code == 200:
-                logger.info(f"[QUERY] Query sent successfully sent to {peer.host}:{peer.port}")
+                self.logger.info(f"[QUERY] Query sent successfully sent to {peer.host}:{peer.port}")
             else:
-                logger.error(
+                self.logger.error(
                     f"[QUERY] Failed to send query to {peer.host}:{peer.port}, status code: {response.status_code}")
         return query
     

@@ -13,20 +13,20 @@ __C.file.save_directory = '../downloads/'
 __C.peer = edict()
 __C.peer.configuration = {
                                 "self": {
-                                    "host": "127.0.0.1",
+                                    "host": "0.0.0.0",
                                     "port": 8081
                                 },
                                 "peers": [
                                     {
-                                        "host": "127.0.0.1",
+                                        "host": "0.0.0.0",
                                         "port": 8082
                                     },
                                     {
-                                        "host": "127.0.0.1",
+                                        "host": "0.0.0.0",
                                         "port": 8083
                                     },
                                     {
-                                        "host": "127.0.0.1",
+                                        "host": "0.0.0.0",
                                         "port": 8084
                                     }
                                 ]
